@@ -28,14 +28,14 @@ class ViewController: UIViewController
         
         scribeView.delegate = self
         
-        label.font = UIFont.systemFontOfSize(200)
+        label.font = UIFont.systemFont(ofSize: 200)
         label.adjustsFontSizeToFitWidth = true
-        label.textAlignment = .Center
+        label.textAlignment = .center
         label.numberOfLines = 10
         
-        clearButton.setTitle("Clear", forState: UIControlState.Normal)
-        clearButton.setTitleColor(UIColor.blueColor(), forState: UIControlState.Normal)
-        clearButton.addTarget(self, action: "clear", forControlEvents: UIControlEvents.TouchDown)
+        clearButton.setTitle("Clear", for: UIControl.State.normal)
+        clearButton.setTitleColor(.blue, for: UIControl.State.normal)
+        clearButton.addTarget(self, action:  #selector(CIImageAccumulator.clear), for: UIControl.Event.touchDown)
         
         view.addSubview(label)
         view.addSubview(scribeView)
@@ -54,8 +54,8 @@ class ViewController: UIViewController
         
         clearButton.frame = CGRect(x: 5,
             y: topLayoutGuide.length,
-            width: clearButton.intrinsicContentSize().width,
-            height: clearButton.intrinsicContentSize().height)
+            width: clearButton.intrinsicContentSize.width,
+            height: clearButton.intrinsicContentSize.height)
     }
  
 }
@@ -66,7 +66,7 @@ extension ViewController: ScribeViewDelegate
     {
         if didMatchPattern == "<"
         {
-            string.removeAtIndex(string.endIndex.predecessor())
+            string.removeLast()
         }
         else
         {

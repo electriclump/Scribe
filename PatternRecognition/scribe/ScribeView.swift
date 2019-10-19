@@ -20,12 +20,12 @@ class ScribeView: UIView
     
     var strokePoints = [CGPoint]()
     
-    var minX = CGFloat.max
-    var minY = CGFloat.max
+    var minX = CGFloat.greatestFiniteMagnitude
+    var minY = CGFloat.greatestFiniteMagnitude
     var maxX = CGFloat(0.0)
     var maxY = CGFloat(0.0)
     
-    var timer: NSTimer?
+    var timer: Timer?
     
     var inflight = false
     {
@@ -36,7 +36,7 @@ class ScribeView: UIView
                 timer?.invalidate()
             }
             
-            UIView.animateWithDuration(0.2)
+            UIView.animate(withDuration: 0.2)
             {
                 self.backgroundColor = self.inflight ? UIColor(white: 0.5, alpha: 0.5) : nil
             }
@@ -48,10 +48,10 @@ class ScribeView: UIView
         super.init(frame: frame)
         
         shapeLayer.fillColor = nil
-        shapeLayer.strokeColor = UIColor.blackColor().CGColor
+        shapeLayer.strokeColor = UIColor.black.cgColor
         shapeLayer.lineWidth = 4
 
-        shapeLayer.shadowColor = UIColor.whiteColor().CGColor
+        shapeLayer.shadowColor = UIColor.white.cgColor
         shapeLayer.shadowOpacity = 1
         shapeLayer.shadowOffset = CGSize(width: 0, height: 0)
         
@@ -63,7 +63,7 @@ class ScribeView: UIView
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         guard let touch = touches.first else
         {
@@ -72,25 +72,25 @@ class ScribeView: UIView
         
         if !inflight
         {
-            strokePoints = [touch.locationInView(self)]
+            strokePoints = [touch.location(in: self)]
             
-            minX = CGFloat.max
-            minY = CGFloat.max
+            minX = CGFloat.greatestFiniteMagnitude
+            minY = CGFloat.greatestFiniteMagnitude
             maxX = CGFloat(0.0)
             maxY = CGFloat(0.0)
             
             bezierPath.removeAllPoints()
         }
         
-        bezierPath.moveToPoint(touch.locationInView(self))
+        bezierPath.move(to: touch.location(in: self))
         inflight = true
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?)
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         guard let
             touch = touches.first,
-            coalescedTouches = event?.coalescedTouchesForTouch(touch) else
+            let coalescedTouches = event?.coalescedTouches(for: touch) else
         {
             return
         }
@@ -99,10 +99,10 @@ class ScribeView: UIView
         
         for touch in coalescedTouches
         {
-            let locationInView = touch.locationInView(self)
+            let locationInView = touch.location(in: self)
             
             strokePoints.append(locationInView)
-            bezierPath.addLineToPoint(locationInView)
+            bezierPath.addLine(to: locationInView)
             
             minX = min(locationInView.x, minX)
             minY = min(locationInView.y, minY)
@@ -111,26 +111,26 @@ class ScribeView: UIView
             maxY = max(locationInView.y, maxY)
         }
         
-        shapeLayer.path = bezierPath.CGPath
+        shapeLayer.path = bezierPath.cgPath
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        timer =  NSTimer.scheduledTimerWithTimeInterval(0.3,
+        timer =  Timer.scheduledTimer(timeInterval: 0.3,
             target: self,
-            selector: "timerHandler",
+            selector: #selector(timerHandler),
             userInfo: nil,
             repeats: false)
     }
     
-    func timerHandler()
+    @objc func timerHandler()
     {
         handleGesture()
         
         inflight = false
         
         bezierPath.removeAllPoints()
-        shapeLayer.path = bezierPath.CGPath
+        shapeLayer.path = bezierPath.cgPath
     }
     
     func handleGesture()
@@ -143,13 +143,12 @@ class ScribeView: UIView
         
         if (gestureHeight / gestureWidth) < 0.2
         {
-            delegate?.scribeView(self, didMatchPattern: " ")
+            delegate?.scribeView(scribeView: self, didMatchPattern: " ")
             
             return
         }
         
-        var cells = [[Bool]](count: cellCount, repeatedValue: [Bool](count: cellCount, repeatedValue: false))
-        
+        var cells:[[Bool]] = Array(repeating: Array(repeating: false, count: cellCount), count: cellCount)
         let origin = CGPoint(x: min(minX, maxX), y: min(minY, maxY))
         
         for point in strokePoints
@@ -176,19 +175,17 @@ class ScribeView: UIView
             return popcount > $0.0 ? (popcount, $1.0, $1.1) : $0
         }
         
-        delegate?.scribeView(self, didMatchPattern: bestMatch.2)
+        delegate?.scribeView(scribeView: self, didMatchPattern: bestMatch.2)
     }
     
-    func printToConsole(strokeResult strokeResult: UInt64, cells: [[Bool]])
+    func printToConsole(strokeResult: UInt64, cells: [[Bool]])
     {
         print("")
         
-        for var i = 0 ; i < cellCount ; i++
-        {
+        for i in 0..<cellCount {
             var row = ""
             
-            for var j = 0 ; j < cellCount ; j++
-            {
+            for j in 0..<cellCount {
                 row += (cells[j][i] ? "*" : " ")
             }
             
